@@ -13,6 +13,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +37,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             MyApp {
-                TopHeader()
+                MainContent()
+                //TopHeader()
             }
         }
     }
@@ -47,6 +49,7 @@ fun MyApp(content: @Composable () -> Unit) {
     JetTipAppTheme {
         // A surface container using the 'background' color from the theme
         Surface(
+            modifier = Modifier.fillMaxHeight(),
             color = MaterialTheme.colorScheme.background
         ) {
             content()
@@ -103,33 +106,41 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
         totalBillState.value.trim().isNotEmpty()
     }
 
+    val sliderPositionState = remember {
+        mutableStateOf(0f)
+    }
     val keyboardController = LocalSoftwareKeyboardController.current
-
-    Surface(
-        modifier = Modifier
-            .padding(2.dp)
-            .fillMaxWidth(),
-        shape = RoundedCornerShape(corner = CornerSize(8.dp)),
-        border = BorderStroke(width = 1.dp, color = Color.LightGray)
-    ) {
-        Column(
-            modifier = Modifier.padding(6.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start
+    Column() {
+        TopHeader()
+        Surface(
+            modifier = Modifier
+                .padding(12.dp)
+                .fillMaxWidth(),
+            shape = RoundedCornerShape(corner = CornerSize(8.dp)),
+            border = BorderStroke(width = 1.dp, color = Color.LightGray)
         ) {
-            InputField(
-                valueState = totalBillState,
-                labelId = "Enter Bill",
-                enabled = true,
-                isSingleLine = true,
-                onAction = KeyboardActions {
-                    if (validState.not()) return@KeyboardActions
-                    onValChange(totalBillState.value.trim())
-                    keyboardController?.hide()
+            Column(
+                modifier = Modifier.padding(6.dp),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start
+            ) {
+                val numberOfPeople = remember {
+                    mutableStateOf(1)
                 }
-            )
 
-            if (validState) {
+                InputField(
+                    valueState = totalBillState,
+                    labelId = "Enter Bill",
+                    enabled = true,
+                    isSingleLine = true,
+                    onAction = KeyboardActions {
+                        if (validState.not()) return@KeyboardActions
+                        onValChange(totalBillState.value.trim())
+                        keyboardController?.hide()
+                    }
+                )
+
+                //  if (validState) {
                 Row(modifier = Modifier.padding(3.dp), horizontalArrangement = Arrangement.Start) {
                     Text(
                         text = "Split", modifier = Modifier.align(
@@ -141,15 +152,56 @@ fun BillForm(modifier: Modifier = Modifier, onValChange: (String) -> Unit = {}) 
                         modifier = Modifier.padding(horizontal = 3.dp),
                         horizontalArrangement = Arrangement.End
                     ) {
-                        RoundIconButton(imageVector = Icons.Default.Remove, onClick = { /*TODO*/ })
-                        RoundIconButton(imageVector = Icons.Default.Add, onClick = { /*TODO*/ })
+                        RoundIconButton(imageVector = Icons.Default.Remove, onClick = {
+                            if (numberOfPeople.value > 1) {
+                                numberOfPeople.value--
+                            }
+                        })
+                        Text(
+                            text = numberOfPeople.value.toString(), modifier = Modifier
+                                .align(Alignment.CenterVertically)
+                                .padding(start = 9.dp, end = 9.dp)
+                        )
+                        RoundIconButton(imageVector = Icons.Default.Add, onClick = {
+                            numberOfPeople.value++
+                        })
                     }
                 }
-            } else {
-                Box() {}
+
+                //Tip Row
+                Row(modifier = Modifier.padding(horizontal = 3.dp, vertical = 12.dp)) {
+                    Text(
+                        text = "Tip",
+                        modifier = Modifier.align(alignment = Alignment.CenterVertically)
+                    )
+                    Spacer(modifier = Modifier.width(200.dp))
+                    Text(
+                        text = "$33.00",
+                        modifier = Modifier.align(alignment = Alignment.CenterVertically)
+                    )
+                }
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(text = "33%")
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Slider(
+                        value = sliderPositionState.value,
+                        onValueChange = { newVal ->
+                            sliderPositionState.value = newVal
+                        },
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp),
+                        steps = 5,
+                        onValueChangeFinished = {})
+                }
+                /* } else {
+                     Box() {}
+                 }*/
             }
         }
     }
+
 }
 
 
